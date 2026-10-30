@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>簡易計算機</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="calculator" aria-label="計算機">
+    <div class="display">
+      <div class="expression" id="expression" aria-live="polite"></div>
+      <output class="result" id="result">0</output>
+    </div>
+    <div class="keys">
+      <button class="key fn" data-action="clear">AC</button>
+      <button class="key fn" data-action="backspace" aria-label="刪除">⌫</button>
+      <button class="key fn" data-action="percent">%</button>
+      <button class="key op" data-op="/" aria-label="除">÷</button>
+
+      <button class="key" data-digit="7">7</button>
+      <button class="key" data-digit="8">8</button>
+      <button class="key" data-digit="9">9</button>
+      <button class="key op" data-op="*" aria-label="乘">×</button>
+
+      <button class="key" data-digit="4">4</button>
+      <button class="key" data-digit="5">5</button>
+      <button class="key" data-digit="6">6</button>
+      <button class="key op" data-op="-" aria-label="減">−</button>
+
+      <button class="key" data-digit="1">1</button>
+      <button class="key" data-digit="2">2</button>
+      <button class="key" data-digit="3">3</button>
+      <button class="key op" data-op="+" aria-label="加">+</button>
+
+      <button class="key" data-action="negate" aria-label="正負號">±</button>
+      <button class="key" data-digit="0">0</button>
+      <button class="key" data-action="decimal" aria-label="小數點">.</button>
+      <button class="key equals" data-action="equals" aria-label="等於">=</button>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
