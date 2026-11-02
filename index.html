@@ -15,12 +15,32 @@
       <div id="class-list" class="class-list"></div>
     </section>
 
+    <section id="intro-screen" class="screen" hidden>
+      <div id="intro-lines" class="intro-lines"></div>
+      <button id="btn-intro" class="intro-button" type="button"><kbd>1</kbd> 出擊</button>
+    </section>
+
     <section id="battle-screen" class="screen" hidden>
+      <p id="stage-label" class="stage-label"></p>
       <div class="stage">
         <canvas id="battle-canvas" aria-label="戰鬥畫面"></canvas>
         <div id="result" class="result" hidden>
           <h2 id="result-title"></h2>
           <p id="result-text"></p>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="status-card" id="enemy-status">
+          <div class="status-head"><span class="status-name"></span><span class="status-hp-num"></span></div>
+          <div class="bar"><div class="bar-fill hp"></div></div>
+          <p class="status-hint"></p>
+        </div>
+        <div class="status-card" id="player-status">
+          <div class="status-head"><span class="status-name"></span><span class="status-hp-num"></span></div>
+          <div class="bar"><div class="bar-fill hp"></div></div>
+          <div class="status-head mp-head"><span>MP</span><span class="status-mp-num"></span></div>
+          <div class="bar bar-thin"><div class="bar-fill mp"></div></div>
         </div>
       </div>
 

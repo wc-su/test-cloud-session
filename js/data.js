@@ -7,11 +7,11 @@ const CLASSES = {
     name: '裝甲戰士',
     icon: '🦾',
     description: '穿著動力裝甲的前線兵。血量與防禦高，擅長物理攻擊。',
-    maxHp: 130,
+    maxHp: 120,
     maxMp: 20,
     attack: 20,
     defense: 10,
-    spell: { name: '震盪斬', cost: 10, power: 26 },
+    spell: { name: '震盪斬', cost: 10, power: 22 },
   },
   mage: {
     id: 'mage',
@@ -19,7 +19,7 @@ const CLASSES = {
     icon: '🔮',
     description: '操控高能電漿的術士。身體脆弱，但魔法威力強大。',
     maxHp: 95,
-    maxMp: 60,
+    maxMp: 70,
     attack: 9,
     defense: 5,
     spell: { name: '電漿射線', cost: 12, power: 34 },
@@ -76,13 +76,14 @@ const ENEMIES = [
   },
 ];
 
-// 每打贏一場（魔王戰除外），從中隨機抽出幾個讓玩家挑一個
+// 每打贏一場（魔王戰除外），從中隨機抽出幾個讓玩家挑一個。
+// classes：只有這些職業會抽到；沒寫表示所有職業都會抽到。
 const UPGRADES = [
-  { id: 'attack', name: '強化動力拳套', desc: '攻擊 +4', apply: (p) => { p.attack += 4; } },
+  { id: 'attack', name: '強化動力拳套', desc: '攻擊 +4', classes: ['warrior'], apply: (p) => { p.attack += 4; } },
   { id: 'hp', name: '奈米修復裝甲', desc: '最大 HP +20', apply: (p) => { p.maxHp += 20; p.hp += 20; } },
   { id: 'defense', name: '偏折力場', desc: '防禦 +3', apply: (p) => { p.defense += 3; } },
   { id: 'mp', name: '擴充能量核心', desc: '最大 MP +10', apply: (p) => { p.maxMp += 10; p.mp += 10; } },
-  { id: 'spell', name: '超載迴路', desc: '魔法威力 +8', apply: (p) => { p.spell.power += 8; } },
+  { id: 'spell', name: '超載迴路', desc: '魔法威力 +8', classes: ['mage'], apply: (p) => { p.spell.power += 8; } },
 ];
 
 // 戰鬥規則常數

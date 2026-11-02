@@ -1,30 +1,48 @@
-// 畫面流程與操作：選職業 → 連續戰鬥（每場之間挑強化）→ 魔王 → 破關／戰敗。
+// 畫面流程與操作：
+// 選職業 → 開場白 → 連續戰鬥（每場之間挑強化）→ 魔王 → 破關／戰敗。
 
-const ENEMY_TURN_DELAY = 700; // 敵人行動前的停頓（毫秒）
+const ENEMY_TURN_DELAY = 750; // 敵人行動前的停頓（毫秒）
+const DEFEAT_DELAY = 900; // 有人倒下後，等倒下動畫播完再顯示結果
 const MAX_LOG_LINES = 6;
 
+const $ = (id) => document.getElementById(id);
 const el = {
-  titleScreen: document.getElementById('title-screen'),
-  battleScreen: document.getElementById('battle-screen'),
-  classList: document.getElementById('class-list'),
-  canvas: document.getElementById('battle-canvas'),
-  log: document.getElementById('battle-log'),
-  actions: document.getElementById('actions'),
-  btnPhysical: document.getElementById('btn-physical'),
-  btnMagic: document.getElementById('btn-magic'),
-  btnDefend: document.getElementById('btn-defend'),
-  result: document.getElementById('result'),
-  resultTitle: document.getElementById('result-title'),
-  resultText: document.getElementById('result-text'),
-  choices: document.getElementById('choices'),
-  choicesTitle: document.getElementById('choices-title'),
-  choicesList: document.getElementById('choices-list'),
+  titleScreen: $('title-screen'),
+  introScreen: $('intro-screen'),
+  battleScreen: $('battle-screen'),
+  classList: $('class-list'),
+  introLines: $('intro-lines'),
+  btnIntro: $('btn-intro'),
+  stageLabel: $('stage-label'),
+  canvas: $('battle-canvas'),
+  enemyStatus: $('enemy-status'),
+  playerStatus: $('player-status'),
+  log: $('battle-log'),
+  actions: $('actions'),
+  btnPhysical: $('btn-physical'),
+  btnMagic: $('btn-magic'),
+  btnDefend: $('btn-defend'),
+  result: $('result'),
+  resultTitle: $('result-title'),
+  resultText: $('result-text'),
+  choices: $('choices'),
+  choicesTitle: $('choices-title'),
+  choicesList: $('choices-list'),
 };
 
 let player = null; // 整場遊戲沿用的角色
 let battle = null; // 目前這一場戰鬥
-let busy = false; // 敵人行動中，暫停玩家輸入
+let busy = false; // 動畫或敵人行動中，暫停玩家輸入
+let turnCount = 0; // 整場遊戲累計回合數
 let currentChoices = []; // 目前畫面上的選項，供鍵盤選擇
+
+// ---------- 畫面切換 ----------
+
+function showScreen(screen) {
+  el.titleScreen.hidden = screen !== 'title';
+  el.introScreen.hidden = screen !== 'intro';
+  el.battleScreen.hidden = screen !== 'battle';
+}
 
 // ---------- 選職業 ----------
 
@@ -47,13 +65,31 @@ function renderClassList() {
   });
 }
 
-function showScreen(screen) {
-  el.titleScreen.hidden = screen !== 'title';
-  el.battleScreen.hidden = screen !== 'battle';
-}
+// ---------- 開場白 ----------
 
 function startGame(classId) {
   player = createPlayer(classId);
+  turnCount = 0;
+  const boss = ENEMIES[ENEMIES.length - 1];
+  const lines = [
+    '西元 3172 年，人類的殖民星系遭到不明勢力入侵。',
+    `入侵者的首領「${boss.name}」率領異星軍團，正逼近人類最後的防線。`,
+    `身為${player.name}的你，奉命獨自突破敵陣。`,
+    '打倒魔王，守住銀河的未來吧！',
+  ];
+  el.introLines.innerHTML = '';
+  lines.forEach((text, i) => {
+    const p = document.createElement('p');
+    p.textContent = text;
+    p.style.animationDelay = `${i * 0.6}s`;
+    el.introLines.appendChild(p);
+  });
+  el.btnIntro.style.animationDelay = `${lines.length * 0.6}s`;
+  showScreen('intro');
+  el.btnIntro.focus();
+}
+
+function beginBattles() {
   el.log.innerHTML = '';
   showScreen('battle');
   startBattle(0);
@@ -71,16 +107,17 @@ function backToTitle() {
 function startBattle(enemyIndex) {
   battle = createBattle(player, enemyIndex);
   busy = false;
+  resetEffects();
   hideChoices();
   el.result.hidden = true;
   el.actions.hidden = false;
   resizeCanvas(el.canvas);
-  addLogs([`── ${stageLabel(battle)} ──`, battle.enemy.intro]);
-  refresh();
-}
 
-function stageLabel(b) {
-  return b.isBoss ? '魔王戰' : `第 ${b.enemyIndex + 1} 戰`;
+  const label = battle.isBoss ? '魔王戰' : `第 ${enemyIndex + 1} / ${ENEMIES.length - 1} 戰`;
+  el.stageLabel.textContent = label;
+  el.stageLabel.classList.toggle('boss', battle.isBoss);
+  addLogs([`── ${label} ──`, battle.enemy.intro]);
+  refresh();
 }
 
 function addLogs(lines) {
@@ -92,8 +129,46 @@ function addLogs(lines) {
   while (el.log.children.length > MAX_LOG_LINES) el.log.firstChild.remove();
 }
 
+function resistHint(resist) {
+  const weak = [];
+  const strong = [];
+  if (resist.physical > 1) weak.push('物理');
+  if (resist.magic > 1) weak.push('魔法');
+  if (resist.physical < 1) strong.push('物理');
+  if (resist.magic < 1) strong.push('魔法');
+  const parts = [];
+  if (weak.length) parts.push(`弱點：${weak.join('、')}`);
+  if (strong.length) parts.push(`抗性：${strong.join('、')}`);
+  return parts.join('｜');
+}
+
+function setBar(fill, value, max) {
+  const ratio = max > 0 ? value / max : 0;
+  fill.style.width = `${ratio * 100}%`;
+  if (fill.classList.contains('hp')) {
+    fill.classList.toggle('mid', ratio <= 0.5 && ratio > 0.2);
+    fill.classList.toggle('low', ratio <= 0.2);
+  }
+}
+
+function updateStatus() {
+  const { enemy } = battle;
+  const e = el.enemyStatus;
+  e.querySelector('.status-name').textContent = `${enemy.icon} ${enemy.name}`;
+  e.querySelector('.status-hp-num').textContent = `${enemy.hp} / ${enemy.maxHp}`;
+  setBar(e.querySelector('.bar-fill.hp'), enemy.hp, enemy.maxHp);
+  e.querySelector('.status-hint').textContent = resistHint(enemy.resist);
+
+  const p = el.playerStatus;
+  p.querySelector('.status-name').textContent = `${player.icon} ${player.name}`;
+  p.querySelector('.status-hp-num').textContent = `${player.hp} / ${player.maxHp}`;
+  p.querySelector('.status-mp-num').textContent = `${player.mp} / ${player.maxMp}`;
+  setBar(p.querySelector('.bar-fill.hp'), player.hp, player.maxHp);
+  setBar(p.querySelector('.bar-fill.mp'), player.mp, player.maxMp);
+}
+
 function refresh() {
-  drawScene(el.canvas, battle);
+  updateStatus();
   el.btnMagic.querySelector('.label').textContent = `${player.spell.name}（${player.spell.cost} MP）`;
   const locked = busy || battle.result !== null;
   el.btnPhysical.disabled = locked;
@@ -101,27 +176,39 @@ function refresh() {
   el.btnMagic.disabled = locked || !canCastSpell(battle);
 }
 
+function play(outcome) {
+  addLogs(outcome.logs);
+  outcome.events.forEach(playEvent);
+}
+
 function onAction(action) {
   if (!battle || busy || battle.result) return;
   if (action === 'magic' && !canCastSpell(battle)) return;
 
-  const { ok, logs } = playerAct(battle, action);
-  addLogs(logs);
-  if (!ok) return;
+  const outcome = playerAct(battle, action);
+  if (!outcome.ok) {
+    addLogs(outcome.logs);
+    return;
+  }
+  turnCount += 1;
+  play(outcome);
+  busy = true;
+  refresh();
 
   if (battle.result) {
-    refresh();
-    endBattle();
+    setTimeout(endBattle, DEFEAT_DELAY);
     return;
   }
 
-  busy = true;
-  refresh();
   setTimeout(() => {
-    addLogs(enemyAct(battle).logs);
+    play(enemyAct(battle));
+    if (battle.result) {
+      refresh();
+      setTimeout(endBattle, DEFEAT_DELAY);
+      return;
+    }
     busy = false;
     refresh();
-    if (battle.result) endBattle();
   }, ENEMY_TURN_DELAY);
 }
 
@@ -129,20 +216,20 @@ function endBattle() {
   el.actions.hidden = true;
 
   if (battle.result === 'lose') {
-    showResult('戰敗……', '別灰心，換個戰術再從頭挑戰一次吧。');
+    showResult('戰敗……', `${player.name}在${battle.enemy.name}面前倒下了。調整戰術，再挑戰一次吧。`);
     showChoices('', [{ name: '回到選擇職業', onPick: backToTitle }]);
     return;
   }
 
   if (isLastEnemy(battle.enemyIndex)) {
-    showResult('破關！', `你擊敗了${battle.enemy.name}，銀河恢復了和平。`);
+    showResult('破關！', `${battle.enemy.name}被擊敗，異星軍團撤退了。你以 ${turnCount} 個回合守住了銀河。`);
     showChoices('', [{ name: '再玩一次', onPick: backToTitle }]);
     return;
   }
 
   showResult('勝利！', '選擇一項強化，並稍作休整後繼續前進。');
   const nextIndex = battle.enemyIndex + 1;
-  const options = rollUpgrades().map((up) => ({
+  const options = rollUpgrades(player).map((up) => ({
     name: up.name,
     desc: up.desc,
     onPick: () => {
@@ -195,6 +282,7 @@ function pickChoice(index) {
 el.btnPhysical.addEventListener('click', () => onAction('physical'));
 el.btnMagic.addEventListener('click', () => onAction('magic'));
 el.btnDefend.addEventListener('click', () => onAction('defend'));
+el.btnIntro.addEventListener('click', beginBattles);
 
 document.addEventListener('keydown', (e) => {
   if (e.repeat) return;
@@ -204,6 +292,8 @@ document.addEventListener('keydown', (e) => {
   if (!el.titleScreen.hidden) {
     const cls = Object.values(CLASSES)[n - 1];
     if (cls) startGame(cls.id);
+  } else if (!el.introScreen.hidden) {
+    if (n === 1) beginBattles();
   } else if (!el.choices.hidden) {
     pickChoice(n - 1);
   } else {
@@ -213,10 +303,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('resize', () => {
-  if (!battle) return;
-  resizeCanvas(el.canvas);
-  drawScene(el.canvas, battle);
+  if (battle) resizeCanvas(el.canvas);
 });
 
 renderClassList();
 showScreen('title');
+startRenderLoop(el.canvas, () => (el.battleScreen.hidden ? null : battle));

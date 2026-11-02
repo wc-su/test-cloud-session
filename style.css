@@ -152,3 +152,99 @@ kbd {
 }
 .choice-name { font-weight: bold; }
 .choice-desc { font-size: 0.9em; color: var(--accent); }
+
+/* 開場白 */
+.intro-lines {
+  max-width: 34em;
+  margin: 24px auto;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  line-height: 1.9;
+}
+.intro-lines p {
+  margin: 0 0 0.8em;
+  opacity: 0;
+  animation: fade-in 0.8s ease forwards;
+}
+.intro-lines p:last-child { margin-bottom: 0; color: var(--accent); }
+.intro-button {
+  display: block;
+  margin: 0 auto;
+  padding: 12px 40px;
+  font-size: 1.1em;
+  opacity: 0;
+  animation: fade-in 0.6s ease forwards;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 關卡標題 */
+.stage-label {
+  margin: 0 0 8px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.stage-label.boss { color: #ff8098; }
+
+/* 狀態列 */
+.status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.status-card {
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 0;
+}
+.status-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+.status-name {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: var(--text);
+}
+.status-hp-num, .status-mp-num { white-space: nowrap; }
+.mp-head { margin-top: 6px; }
+.bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.bar-thin { height: 7px; }
+.bar-fill {
+  height: 100%;
+  transition: width 0.4s ease, background-color 0.4s ease;
+}
+.bar-fill.hp { background: #3ee08f; }
+.bar-fill.hp.mid { background: #f5c542; }
+.bar-fill.hp.low { background: #ff5470; }
+.bar-fill.mp { background: #4aa8ff; }
+.status-hint {
+  margin: 6px 0 0;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+.status-hint:empty { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-lines p, .intro-button { animation: none; opacity: 1; }
+  .bar-fill { transition: none; }
+}
