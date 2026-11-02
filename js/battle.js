@@ -80,7 +80,9 @@ function playerAct(battle, action, rng = Math.random) {
     );
     player.mp += restore;
     events.push({ type: 'defend', target: 'player', amount: restore });
-    logs.push(`${player.name}擺出防禦姿態，回復 ${restore} 點 MP。`);
+    logs.push(restore > 0
+      ? `${player.name}擺出防禦姿態，回復 ${restore} 點 MP。`
+      : `${player.name}擺出防禦姿態。`);
   } else {
     throw new Error(`未知的行動：${action}`);
   }
