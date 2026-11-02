@@ -1,12 +1,26 @@
 // 戰鬥邏輯：不碰畫面，只處理數值與回合。
 // 每個動作都回傳一串訊息，交給畫面層顯示。
 
-function createBattle(classId, enemyIndex) {
+// 玩家角色在整場遊戲中沿用，強化與受傷都會延續到下一場
+function createPlayer(classId) {
   const cls = CLASSES[classId];
-  const enemy = ENEMIES[enemyIndex];
   return {
-    player: { ...cls, hp: cls.maxHp, mp: cls.maxMp, defending: false },
-    enemy: { ...enemy, hp: enemy.maxHp },
+    ...cls,
+    spell: { ...cls.spell }, // 複製一份，避免強化時改到原始資料
+    hp: cls.maxHp,
+    mp: cls.maxMp,
+    defending: false,
+  };
+}
+
+function createBattle(player, enemyIndex) {
+  const enemy = ENEMIES[enemyIndex];
+  player.defending = false;
+  return {
+    player,
+    enemy: { ...enemy, hp: enemy.maxHp, turns: 0, charging: false },
+    enemyIndex,
+    isBoss: Boolean(enemy.boss),
     result: null, // null：進行中，'win'：勝利，'lose'：失敗
   };
 }
@@ -71,16 +85,59 @@ function playerAct(battle, action, rng = Math.random) {
 function enemyAct(battle, rng = Math.random) {
   const { player, enemy } = battle;
   const logs = [];
+  const boss = enemy.boss;
 
-  let dmg = calcDamage(enemy.attack, player.defense, RULES.physicalDefenseFactor, 1, rng);
+  let power = enemy.attack;
+  let skillName = '攻擊';
+
+  if (boss && enemy.charging) {
+    enemy.charging = false;
+    power = Math.round(enemy.attack * boss.heavyMultiplier);
+    skillName = `「${boss.heavyName}」`;
+  } else if (boss && (enemy.turns + 1) % boss.chargeEvery === 0) {
+    enemy.charging = true;
+    enemy.turns += 1;
+    player.defending = false;
+    logs.push(`${enemy.name}正在蓄積能量……下一回合將發動「${boss.heavyName}」！`);
+    return { logs };
+  }
+
+  let dmg = calcDamage(power, player.defense, RULES.physicalDefenseFactor, 1, rng);
   if (player.defending) dmg = Math.max(1, Math.round(dmg * RULES.defendDamageRate));
   player.hp = Math.max(0, player.hp - dmg);
-  logs.push(`${enemy.name}發動攻擊！${player.name}受到 ${dmg} 點傷害${player.defending ? '（防禦減傷）' : ''}。`);
+  logs.push(`${enemy.name}發動${skillName}！${player.name}受到 ${dmg} 點傷害${player.defending ? '（防禦減傷）' : ''}。`);
   player.defending = false;
+  enemy.turns += 1;
 
   if (player.hp <= 0) {
     battle.result = 'lose';
     logs.push(`${player.name}倒下了……`);
   }
   return { logs };
+}
+
+// ---------- 戰鬥之間 ----------
+
+function isLastEnemy(enemyIndex) {
+  return enemyIndex >= ENEMIES.length - 1;
+}
+
+// 從強化選項中隨機抽出不重複的幾個
+function rollUpgrades(rng = Math.random) {
+  const pool = [...UPGRADES];
+  const picks = [];
+  while (picks.length < RULES.upgradeChoices && pool.length > 0) {
+    picks.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  }
+  return picks;
+}
+
+// 套用強化後，再依比例回復 HP 與 MP；回傳實際回復量
+function applyUpgradeAndRecover(player, upgrade) {
+  upgrade.apply(player);
+  const hpGain = Math.min(player.maxHp - player.hp, Math.round(player.maxHp * RULES.recoverRate));
+  const mpGain = Math.min(player.maxMp - player.mp, Math.round(player.maxMp * RULES.recoverRate));
+  player.hp += hpGain;
+  player.mp += mpGain;
+  return { hpGain, mpGain };
 }

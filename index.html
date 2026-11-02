@@ -21,7 +21,6 @@
         <div id="result" class="result" hidden>
           <h2 id="result-title"></h2>
           <p id="result-text"></p>
-          <button id="btn-restart" type="button">再玩一次</button>
         </div>
       </div>
 
@@ -29,6 +28,11 @@
         <button id="btn-physical" type="button"><kbd>1</kbd><span class="label">物理攻擊</span></button>
         <button id="btn-magic" type="button"><kbd>2</kbd><span class="label">魔法</span></button>
         <button id="btn-defend" type="button"><kbd>3</kbd><span class="label">防禦（回復 MP）</span></button>
+      </div>
+
+      <div id="choices" class="choices" hidden>
+        <p id="choices-title" class="choices-title"></p>
+        <div id="choices-list" class="choices-list"></div>
       </div>
 
       <ul id="battle-log" class="log" aria-live="polite"></ul>

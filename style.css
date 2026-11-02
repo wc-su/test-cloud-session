@@ -134,3 +134,21 @@ kbd {
 .result h2 { margin: 0; font-size: 2em; color: var(--accent); }
 .result p { margin: 0 0 8px; color: var(--muted); }
 .result button { padding: 10px 24px; }
+
+/* 戰鬥之間的選項（強化、下一步） */
+.choices { margin-top: 12px; }
+.choices-title { margin: 0 0 8px; text-align: center; color: var(--muted); }
+.choices-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.choices-list button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+}
+.choice-name { font-weight: bold; }
+.choice-desc { font-size: 0.9em; color: var(--accent); }

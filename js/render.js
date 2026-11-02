@@ -122,6 +122,33 @@ function drawInfoPanel(ctx, x, y, fighter, showMp) {
   }
 }
 
+// 魔王蓄力時的紅色光環與提示
+function drawChargeAura(ctx, x, y) {
+  const glow = ctx.createRadialGradient(x, y, 10, x, y, 85);
+  glow.addColorStop(0, 'rgba(255, 70, 100, 0.55)');
+  glow.addColorStop(1, 'rgba(255, 70, 100, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 85, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#ff8098';
+  ctx.font = 'bold 16px system-ui, "Noto Sans TC", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('⚠ 蓄力中', x, y - 62);
+}
+
+// 右上角的關卡進度
+function drawStageLabel(ctx, battle) {
+  const text = battle.isBoss ? '魔王戰' : `第 ${battle.enemyIndex + 1} / ${ENEMIES.length - 1} 戰`;
+  ctx.font = 'bold 14px system-ui, "Noto Sans TC", sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = battle.isBoss ? '#ff8098' : '#50dcff';
+  ctx.fillText(text, VIEW_WIDTH - 24, 24);
+}
+
 function drawScene(canvas, battle) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
@@ -131,8 +158,10 @@ function drawScene(canvas, battle) {
 
   // 敵人：右上
   drawPlatform(ctx, 470, 190, 90);
+  if (enemy.charging) drawChargeAura(ctx, 470, 150);
   if (enemy.hp > 0) drawSprite(ctx, enemy.icon, 470, 185, 96);
   drawInfoPanel(ctx, 24, 24, enemy, false);
+  drawStageLabel(ctx, battle);
 
   // 玩家：左下
   drawPlatform(ctx, 160, 320, 80);
