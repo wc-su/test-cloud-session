@@ -74,8 +74,8 @@ function playEvent(event) {
       }
     }
   } else if (event.type === 'defend') {
-    // 放在角色右側並縮短時間，避免和接下來的受傷數字重疊
-    if (event.amount > 0) addFloat('player', `+${event.amount} MP`, '#4aa8ff', { size: 24, offsetX: 110, offsetY: 30, duration: 700 });
+    // 放在角色左側（右側是血條）並縮短時間，避免和接下來的受傷數字重疊
+    if (event.amount > 0) addFloat('player', `+${event.amount} MP`, '#4aa8ff', { size: 24, offsetX: -95, offsetY: 30, duration: 700 });
   } else if (event.type === 'defeat') {
     fx.defeat[event.target] = now;
   }

@@ -24,13 +24,7 @@
       <p id="stage-label" class="stage-label"></p>
       <div class="stage">
         <canvas id="battle-canvas" aria-label="戰鬥畫面"></canvas>
-        <div id="result" class="result" hidden>
-          <h2 id="result-title"></h2>
-          <p id="result-text"></p>
-        </div>
-      </div>
-
-      <div class="status-row">
+        <!-- 血條疊在畫面上：敵方在敵人左側，我方在我方右側 -->
         <div class="status-card" id="enemy-status">
           <div class="status-head"><span class="status-name"></span><span class="status-hp-num"></span></div>
           <div class="bar"><div class="bar-fill hp"></div></div>
@@ -41,6 +35,10 @@
           <div class="bar"><div class="bar-fill hp"></div></div>
           <div class="status-head mp-head"><span>MP</span><span class="status-mp-num"></span></div>
           <div class="bar bar-thin"><div class="bar-fill mp"></div></div>
+        </div>
+        <div id="result" class="result" hidden>
+          <h2 id="result-title"></h2>
+          <p id="result-text"></p>
         </div>
       </div>
 
